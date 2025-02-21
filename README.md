@@ -20,7 +20,7 @@ A lightweight desktop application that provides quick access to Grok AI through 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/grok-desktop.git
+   git clone https://github.com/takaf3/grok-desktop.git
    cd grok-desktop
    ```
 
