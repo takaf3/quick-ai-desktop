@@ -1,7 +1,7 @@
 {
-  "name": "quick-grok-desktop",
+  "name": "quick-chatgpt-desktop",
   "version": "1.0.0",
-  "description": "Desktop app for Grok",
+  "description": "Desktop app for ChatGPT",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -12,8 +12,8 @@
     "build:linux": "electron-builder build --linux"
   },
   "build": {
-    "appId": "com.quick-grok-desktop.app",
-    "productName": "Quick Grok Desktop",
+    "appId": "com.quick-chatgpt-desktop.app",
+    "productName": "Quick ChatGPT Desktop",
     "directories": {
       "output": "dist"
     },
