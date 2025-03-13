@@ -5,18 +5,21 @@ let mainWindow = null;
 let tray = null;
 let currentShortcut = 'Control+Space'; // Default shortcut
 let currentSite = 'https://grok.com/'; // Default site
+let windowWidth = 1000; // Default width
+let windowHeight = 900; // Default height
 let updateContextMenu;
 
 // Hide dock icon
 app.dock.hide();
 
 function createWindow() {
-  const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 'Grok';
+  const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
+                     currentSite.includes('claude') ? 'Claude' : 'Grok';
   
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 900,
+    width: windowWidth,
+    height: windowHeight,
     title: `Quick ${serviceName} Desktop`,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -79,12 +82,14 @@ app.whenReady().then(() => {
   
   updateContextMenu = () => {
     // Update tooltip based on current site
-    const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 'Grok';
+    const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
+                       currentSite.includes('claude') ? 'Claude' : 'Grok';
     tray.setToolTip(`Quick ${serviceName} Desktop`);
     
     const contextMenu = Menu.buildFromTemplate([
       { 
-        label: `Open ${currentSite.includes('chatgpt') ? 'ChatGPT' : 'Grok'}`, 
+        label: `Open ${currentSite.includes('chatgpt') ? 'ChatGPT' : 
+               currentSite.includes('claude') ? 'Claude' : 'Grok'}`, 
         click: toggleWindow 
       },
       { type: 'separator' },
@@ -96,6 +101,12 @@ app.whenReady().then(() => {
             type: 'radio',
             checked: currentSite === 'https://chatgpt.com/',
             click: () => changeSite('https://chatgpt.com/')
+          },
+          {
+            label: 'Claude',
+            type: 'radio',
+            checked: currentSite === 'https://claude.ai/',
+            click: () => changeSite('https://claude.ai/')
           },
           {
             label: 'Grok',
@@ -119,6 +130,36 @@ app.whenReady().then(() => {
             type: 'radio',
             checked: currentShortcut === 'Control+Shift+Space',
             click: () => changeShortcut('Control+Shift+Space')
+          }
+        ]
+      },
+      { type: 'separator' },
+      {
+        label: 'Window Size',
+        submenu: [
+          {
+            label: 'Small (800x600)',
+            type: 'radio',
+            checked: windowWidth === 800 && windowHeight === 600,
+            click: () => changeWindowSize(800, 600)
+          },
+          {
+            label: 'Medium (1000x900)',
+            type: 'radio',
+            checked: windowWidth === 1000 && windowHeight === 900,
+            click: () => changeWindowSize(1000, 900)
+          },
+          {
+            label: 'Large (1200x1000)',
+            type: 'radio',
+            checked: windowWidth === 1200 && windowHeight === 1000,
+            click: () => changeWindowSize(1200, 1000)
+          },
+          {
+            label: 'Tall (1000x1400)',
+            type: 'radio',
+            checked: windowWidth === 1000 && windowHeight === 1400,
+            click: () => changeWindowSize(1000, 1400)
           }
         ]
       },
@@ -159,13 +200,25 @@ function changeShortcut(newShortcut) {
 // Function to change site
 function changeSite(newSite) {
   currentSite = newSite;
-  const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 'Grok';
+  const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
+                     currentSite.includes('claude') ? 'Claude' : 'Grok';
   
   if (mainWindow !== null) {
     mainWindow.loadURL(currentSite);
     mainWindow.setTitle(`Quick ${serviceName} Desktop`);
   }
   updateContextMenu(); // Update the menu to reflect the new site
+}
+
+// Function to change window size
+function changeWindowSize(width, height) {
+  windowWidth = width;
+  windowHeight = height;
+  
+  if (mainWindow !== null) {
+    mainWindow.setSize(width, height);
+  }
+  updateContextMenu();
 }
 
 app.on('will-quit', () => {

@@ -1,7 +1,7 @@
 {
-  "name": "quick-chatgpt-desktop",
+  "name": "quick-ai-desktop",
   "version": "1.0.0",
-  "description": "Desktop app for ChatGPT",
+  "description": "Desktop app for quick access to ChatGPT, Claude, and Grok",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -12,8 +12,8 @@
     "build:linux": "electron-builder build --linux"
   },
   "build": {
-    "appId": "com.quick-chatgpt-desktop.app",
-    "productName": "Quick ChatGPT Desktop",
+    "appId": "com.quick-ai-desktop.app",
+    "productName": "Quick AI Desktop",
     "directories": {
       "output": "dist"
     },

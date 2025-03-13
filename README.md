@@ -1,14 +1,16 @@
-# Quick Grok Desktop
+# Quick AI Desktop
 
-A lightweight desktop application that provides quick access to Grok AI through a menubar/tray icon and global shortcut. Built with Electron.
+A lightweight desktop application that provides quick access to ChatGPT, Claude, and Grok AI through a menubar/tray icon and global shortcut. Built with Electron.
 
 ## Features
 
-- 🔍 Quick access to Grok AI through menubar/tray icon
+- 🔍 Quick access to multiple AI services (ChatGPT, Claude, Grok) through menubar/tray icon
 - ⌨️ Global shortcut (Ctrl+Space) to toggle the window
 - 🎯 Auto-focus on chat input when window opens
 - 🖥️ Clean interface without taskbar icon
 - 💨 Fast and lightweight
+- 📐 Configurable window sizes (Small, Medium, Large, Tall)
+- ⌨️ Customizable keyboard shortcuts
 
 ## Prerequisites
 
@@ -20,8 +22,8 @@ A lightweight desktop application that provides quick access to Grok AI through 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/takaf3/grok-desktop.git
-   cd grok-desktop
+   git clone https://github.com/takaf3/quick-ai-desktop.git
+   cd quick-ai-desktop
    ```
 
 2. Install dependencies:
@@ -54,13 +56,15 @@ The built application will be available in the `dist` directory.
 
 1. After installation, launch the application
 2. A menubar/tray icon will appear
-3. Click the icon or press `Ctrl+Space` to toggle the Grok window
-4. Start chatting with Grok!
+3. Click the icon or press `Ctrl+Space` to toggle the AI window
+4. Switch between AI services using the tray menu
+5. Customize window size and keyboard shortcuts as needed
+6. Start chatting with your preferred AI!
 
 ## Keyboard Shortcuts
 
-- `Ctrl+Space`: Toggle Grok window
-- Click on tray icon: Toggle Grok window
+- `Ctrl+Space` or `Ctrl+Shift+Space`: Toggle AI window
+- Click on tray icon: Toggle AI window
 
 ## Contributing
 
@@ -77,4 +81,4 @@ This project is licensed under the ISC License - see the `package.json` file for
 ## Acknowledgments
 
 - Built with [Electron](https://www.electronjs.org/)
-- Uses [Grok](https://grok.com/) AI platform 
+- Supports [ChatGPT](https://chatgpt.com/), [Claude](https://claude.ai/), and [Grok](https://grok.com/) AI platforms 
