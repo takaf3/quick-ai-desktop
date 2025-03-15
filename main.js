@@ -14,7 +14,8 @@ app.dock.hide();
 
 function createWindow() {
   const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
-                     currentSite.includes('claude') ? 'Claude' : 'Grok';
+                     currentSite.includes('claude') ? 'Claude' : 
+                     currentSite.includes('gemini') ? 'Gemini' : 'Grok';
   
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -83,13 +84,15 @@ app.whenReady().then(() => {
   updateContextMenu = () => {
     // Update tooltip based on current site
     const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
-                       currentSite.includes('claude') ? 'Claude' : 'Grok';
+                       currentSite.includes('claude') ? 'Claude' : 
+                       currentSite.includes('gemini') ? 'Gemini' : 'Grok';
     tray.setToolTip(`Quick ${serviceName} Desktop`);
     
     const contextMenu = Menu.buildFromTemplate([
       { 
         label: `Open ${currentSite.includes('chatgpt') ? 'ChatGPT' : 
-               currentSite.includes('claude') ? 'Claude' : 'Grok'}`, 
+               currentSite.includes('claude') ? 'Claude' : 
+               currentSite.includes('gemini') ? 'Gemini' : 'Grok'}`, 
         click: toggleWindow 
       },
       { type: 'separator' },
@@ -113,6 +116,12 @@ app.whenReady().then(() => {
             type: 'radio',
             checked: currentSite === 'https://grok.com/',
             click: () => changeSite('https://grok.com/')
+          },
+          {
+            label: 'Gemini',
+            type: 'radio',
+            checked: currentSite === 'https://gemini.google.com/app',
+            click: () => changeSite('https://gemini.google.com/app')
           }
         ]
       },
@@ -171,7 +180,6 @@ app.whenReady().then(() => {
   };
   
   updateContextMenu();
-  tray.on('click', toggleWindow);
 
   // Register global shortcut
   globalShortcut.register(currentShortcut, toggleWindow);
@@ -201,7 +209,8 @@ function changeShortcut(newShortcut) {
 function changeSite(newSite) {
   currentSite = newSite;
   const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
-                     currentSite.includes('claude') ? 'Claude' : 'Grok';
+                     currentSite.includes('claude') ? 'Claude' : 
+                     currentSite.includes('gemini') ? 'Gemini' : 'Grok';
   
   if (mainWindow !== null) {
     mainWindow.loadURL(currentSite);
