@@ -1,10 +1,10 @@
 # Quick AI Desktop
 
-A lightweight desktop application that provides quick access to ChatGPT, Claude, and Grok AI through a menubar/tray icon and global shortcut. Built with Electron.
+A lightweight desktop application that provides quick access to ChatGPT, Claude, Grok, Gemini, and OpenRouter AI through a menubar/tray icon and global shortcut. Built with Electron.
 
 ## Features
 
-- 🔍 Quick access to multiple AI services (ChatGPT, Claude, Grok) through menubar/tray icon
+- 🔍 Quick access to multiple AI services (ChatGPT, Claude, Grok, Gemini, OpenRouter) through menubar/tray icon
 - ⌨️ Global shortcut (Ctrl+Space) to toggle the window
 - 🎯 Auto-focus on chat input when window opens
 - 🖥️ Clean interface without taskbar icon
@@ -81,4 +81,4 @@ This project is licensed under the ISC License - see the `package.json` file for
 ## Acknowledgments
 
 - Built with [Electron](https://www.electronjs.org/)
-- Supports [ChatGPT](https://chatgpt.com/), [Claude](https://claude.ai/), and [Grok](https://grok.com/) AI platforms 
+- Supports [ChatGPT](https://chatgpt.com/), [Claude](https://claude.ai/), [Grok](https://grok.com/), [Gemini](https://gemini.google.com/app), and [OpenRouter](https://openrouter.ai/chat) AI platforms 

@@ -15,7 +15,8 @@ app.dock.hide();
 function createWindow() {
   const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
                      currentSite.includes('claude') ? 'Claude' : 
-                     currentSite.includes('gemini') ? 'Gemini' : 'Grok';
+                     currentSite.includes('gemini') ? 'Gemini' :
+                     currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
   
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -85,14 +86,16 @@ app.whenReady().then(() => {
     // Update tooltip based on current site
     const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
                        currentSite.includes('claude') ? 'Claude' : 
-                       currentSite.includes('gemini') ? 'Gemini' : 'Grok';
+                       currentSite.includes('gemini') ? 'Gemini' :
+                       currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
     tray.setToolTip(`Quick ${serviceName} Desktop`);
     
     const contextMenu = Menu.buildFromTemplate([
       { 
         label: `Open ${currentSite.includes('chatgpt') ? 'ChatGPT' : 
                currentSite.includes('claude') ? 'Claude' : 
-               currentSite.includes('gemini') ? 'Gemini' : 'Grok'}`, 
+               currentSite.includes('gemini') ? 'Gemini' :
+               currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok'}`, 
         click: toggleWindow 
       },
       { type: 'separator' },
@@ -122,6 +125,12 @@ app.whenReady().then(() => {
             type: 'radio',
             checked: currentSite === 'https://gemini.google.com/app',
             click: () => changeSite('https://gemini.google.com/app')
+          },
+          {
+            label: 'OpenRouter',
+            type: 'radio',
+            checked: currentSite === 'https://openrouter.ai/chat',
+            click: () => changeSite('https://openrouter.ai/chat')
           }
         ]
       },
@@ -210,7 +219,8 @@ function changeSite(newSite) {
   currentSite = newSite;
   const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
                      currentSite.includes('claude') ? 'Claude' : 
-                     currentSite.includes('gemini') ? 'Gemini' : 'Grok';
+                     currentSite.includes('gemini') ? 'Gemini' :
+                     currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
   
   if (mainWindow !== null) {
     mainWindow.loadURL(currentSite);
