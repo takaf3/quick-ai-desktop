@@ -1,4 +1,14 @@
-const { app, BrowserWindow, globalShortcut, Tray, Menu } = require('electron');
+const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeTheme } = require('electron');
+
+// Function to get the appropriate tray icon based on theme
+function getTrayIcon() {
+  const iconPath = nativeTheme.shouldUseDarkColors
+    ? path.join(__dirname, 'menubar-icon-dark.png')
+    : path.join(__dirname, 'menubar-icon-light.png');
+  const icon = require('electron').nativeImage.createFromPath(iconPath);
+  icon.setTemplateImage(true);
+  return icon;
+}
 const path = require('path');
 
 let mainWindow = null;
@@ -80,7 +90,12 @@ function toggleWindow() {
 
 app.whenReady().then(() => {
   // Create tray icon
-  tray = new Tray(path.join(__dirname, 'menubar-icon.png'));
+  tray = new Tray(getTrayIcon());
+
+  // Update tray icon when system theme changes
+  nativeTheme.on('updated', () => {
+    tray.setImage(getTrayIcon());
+  });
   
   updateContextMenu = () => {
     // Update tooltip based on current site
