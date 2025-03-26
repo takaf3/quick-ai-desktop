@@ -1,4 +1,5 @@
 const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeTheme } = require('electron');
+const path = require('path');
 
 // Function to get the appropriate tray icon based on theme
 function getTrayIcon() {
@@ -9,7 +10,6 @@ function getTrayIcon() {
   icon.setTemplateImage(true);
   return icon;
 }
-const path = require('path');
 
 let mainWindow = null;
 let tray = null;
@@ -17,10 +17,13 @@ let currentShortcut = 'Control+Space'; // Default shortcut
 let currentSite = 'https://grok.com/'; // Default site
 let windowWidth = 1000; // Default width
 let windowHeight = 900; // Default height
+let appVisibility = 'menubar'; // Default visibility: 'menubar' or 'both'
 let updateContextMenu;
 
-// Hide dock icon
-app.dock.hide();
+// Initially hide dock icon (for menubar-only mode)
+if (appVisibility === 'menubar') {
+  app.dock.hide();
+}
 
 function createWindow() {
   const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
@@ -99,19 +102,19 @@ app.whenReady().then(() => {
   
   updateContextMenu = () => {
     // Update tooltip based on current site
-    const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
-                       currentSite.includes('claude') ? 'Claude' : 
+    const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' :
+                       currentSite.includes('claude') ? 'Claude' :
                        currentSite.includes('gemini') ? 'Gemini' :
                        currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
     tray.setToolTip(`Quick ${serviceName} Desktop`);
     
     const contextMenu = Menu.buildFromTemplate([
-      { 
-        label: `Open ${currentSite.includes('chatgpt') ? 'ChatGPT' : 
-               currentSite.includes('claude') ? 'Claude' : 
+      {
+        label: `Open ${currentSite.includes('chatgpt') ? 'ChatGPT' :
+               currentSite.includes('claude') ? 'Claude' :
                currentSite.includes('gemini') ? 'Gemini' :
-               currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok'}`, 
-        click: toggleWindow 
+               currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok'}`,
+        click: toggleWindow
       },
       { type: 'separator' },
       {
@@ -149,17 +152,17 @@ app.whenReady().then(() => {
           }
         ]
       },
-      { 
+      {
         label: 'Keyboard Shortcut',
         submenu: [
-          { 
-            label: 'Ctrl+Space', 
+          {
+            label: 'Ctrl+Space',
             type: 'radio',
             checked: currentShortcut === 'Control+Space',
             click: () => changeShortcut('Control+Space')
           },
-          { 
-            label: 'Ctrl+Shift+Space', 
+          {
+            label: 'Ctrl+Shift+Space',
             type: 'radio',
             checked: currentShortcut === 'Control+Shift+Space',
             click: () => changeShortcut('Control+Shift+Space')
@@ -193,6 +196,24 @@ app.whenReady().then(() => {
             type: 'radio',
             checked: windowWidth === 1000 && windowHeight === 1400,
             click: () => changeWindowSize(1000, 1400)
+          }
+        ]
+      },
+      { type: 'separator' },
+      {
+        label: 'App Visibility',
+        submenu: [
+          {
+            label: 'Menu Bar Only',
+            type: 'radio',
+            checked: appVisibility === 'menubar',
+            click: () => changeAppVisibility('menubar')
+          },
+          {
+            label: 'Menu Bar + Dock',
+            type: 'radio',
+            checked: appVisibility === 'both',
+            click: () => changeAppVisibility('both')
           }
         ]
       },
@@ -252,6 +273,31 @@ function changeWindowSize(width, height) {
   if (mainWindow !== null) {
     mainWindow.setSize(width, height);
   }
+  updateContextMenu();
+}
+
+// Function to change app visibility
+function changeAppVisibility(visibility) {
+  appVisibility = visibility;
+  
+  // Handle dock visibility
+  if (visibility === 'menubar') {
+    if (app.dock) app.dock.hide();
+  } else if (visibility === 'both') {
+    if (app.dock && !app.dock.isVisible()) app.dock.show();
+  }
+  
+  // Always ensure tray exists
+  if (!tray) {
+    tray = new Tray(getTrayIcon());
+    tray.setToolTip(`Quick AI Desktop`);
+    
+    // Update tray icon when system theme changes
+    nativeTheme.on('updated', () => {
+      tray.setImage(getTrayIcon());
+    });
+  }
+  
   updateContextMenu();
 }
 
