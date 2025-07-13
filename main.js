@@ -50,19 +50,62 @@ function createWindow() {
 
   // Focus on chat input when page is loaded
   mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.webContents.executeJavaScript(`
-      setTimeout(() => {
-        const chatInput = document.querySelector('textarea[placeholder*="chat"], input[placeholder*="chat"]');
-        if (chatInput) {
-          chatInput.focus();
-        }
-      }, 1000);
-    `);
+    focusTextInput();
   });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+}
+
+function focusTextInput() {
+  if (!mainWindow || !mainWindow.webContents) return;
+  
+  // Service-specific selectors for input fields
+  const selectors = {
+    'chatgpt': 'textarea#prompt-textarea, textarea[data-id="root"], textarea[placeholder*="Message"]',
+    'claude': 'div[contenteditable="true"], textarea[placeholder*="Talk to Claude"], div.ProseMirror',
+    'grok': 'textarea[placeholder*="Ask anything"], textarea[placeholder*="Ask Grok"], input[type="text"]',
+    'gemini': 'rich-textarea textarea, textarea[placeholder*="Enter a prompt"], div[contenteditable="true"]',
+    'openrouter': 'textarea[placeholder*="Type a message"], textarea[placeholder*="Send a message"], input[type="text"]'
+  };
+  
+  // Determine which service we're using
+  let serviceKey = 'grok'; // default
+  if (currentSite.includes('chatgpt')) serviceKey = 'chatgpt';
+  else if (currentSite.includes('claude')) serviceKey = 'claude';
+  else if (currentSite.includes('gemini')) serviceKey = 'gemini';
+  else if (currentSite.includes('openrouter')) serviceKey = 'openrouter';
+  
+  const selector = selectors[serviceKey];
+  
+  mainWindow.webContents.executeJavaScript(`
+    (function() {
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      function tryFocus() {
+        const elements = document.querySelectorAll('${selector}');
+        let focused = false;
+        
+        for (const element of elements) {
+          if (element && !element.disabled && element.offsetParent !== null) {
+            element.focus();
+            element.click && element.click();
+            focused = true;
+            break;
+          }
+        }
+        
+        if (!focused && attempts < maxAttempts) {
+          attempts++;
+          setTimeout(tryFocus, 500);
+        }
+      }
+      
+      tryFocus();
+    })();
+  `);
 }
 
 function toggleWindow() {
@@ -79,19 +122,13 @@ function toggleWindow() {
       mainWindow.show();
       mainWindow.focus();
       // Refocus on chat input when showing window
-      mainWindow.webContents.executeJavaScript(`
-        setTimeout(() => {
-          const chatInput = document.querySelector('textarea[placeholder*="chat"], input[placeholder*="chat"]');
-          if (chatInput) {
-            chatInput.focus();
-          }
-        }, 1000);
-      `);
+      focusTextInput();
     }
   }
 }
 
-app.whenReady().then(() => {
+
+app.whenReady().then(async () => {
   // Create tray icon
   tray = new Tray(getTrayIcon());
 
@@ -261,6 +298,10 @@ function changeSite(newSite) {
   if (mainWindow !== null) {
     mainWindow.loadURL(currentSite);
     mainWindow.setTitle(`Quick ${serviceName} Desktop`);
+    // Focus input after changing sites
+    mainWindow.webContents.once('did-finish-load', () => {
+      focusTextInput();
+    });
   }
   updateContextMenu(); // Update the menu to reflect the new site
 }

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!--
+    Minimal entitlements for a non-App-Store Electron app with the
+    hardened runtime enabled. Adjust if you add additional capabilities
+    (e.g. AppleScript, microphone, etc.).
+  -->
+  <!-- Allow Electron's helper processes to JIT-compile code (V8) -->
+  <key>com.apple.security.cs.allow-jit</key>
+  <true/>
+
+  <!-- Permit unsigned executable memory (Chromium / Node) -->
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+  <true/>
+
+  <!-- Disable library validation so Electron can load its own dylibs -->
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+
+  <!-- We're *not* sandboxing this distribution build -->
+  <key>com.apple.security.app-sandbox</key>
+  <false/>
+
+  <!-- Outbound network access for talking to web AIs -->
+  <key>com.apple.security.network.client</key>
+  <true/>
+</dict>
+</plist> 

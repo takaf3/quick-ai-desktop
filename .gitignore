@@ -49,4 +49,8 @@ logs/
 build/Release
 
 # Coverage directory used by tools like istanbul
-coverage/ 
+coverage/
+
+# Chrome extensions (except README)
+extensions/*
+!extensions/README.md 
