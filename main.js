@@ -32,7 +32,7 @@ function createWindow() {
                      currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
   
   // Create the browser window.
-  mainWindow = new BrowserWindow({
+  const windowOptions = {
     width: windowWidth,
     height: windowHeight,
     title: `Quick ${serviceName} Desktop`,
@@ -43,7 +43,23 @@ function createWindow() {
     },
     show: false, // Don't show window initially
     skipTaskbar: true // Hide from taskbar
-  });
+  };
+
+  // macOS: hide native title bar but preserve traffic lights and a safe top margin
+  if (process.platform === 'darwin') {
+    // Keep standard window with hidden title bar and inset traffic lights
+    windowOptions.titleBarStyle = 'hiddenInset';
+    // Provide an overlay so content starts below it (prevents overlap with traffic lights)
+    windowOptions.titleBarOverlay = {
+      color: '#00000000',
+      symbolColor: nativeTheme.shouldUseDarkColors ? '#ffffff' : '#000000',
+      height: 36
+    };
+    // Fine-tune traffic light vertical position so it's visually centered
+    windowOptions.trafficLightPosition = { x: 12, y: 10 };
+  }
+
+  mainWindow = new BrowserWindow(windowOptions);
 
   // Load the selected site
   mainWindow.loadURL(currentSite);
