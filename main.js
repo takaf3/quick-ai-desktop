@@ -549,11 +549,11 @@ function loadSplitView() {
         
         /* Focus mode styles */
         .pane.focused {
-          flex: 0 0 85% !important;
+          flex: 0 0 90% !important;
           opacity: 1;
         }
         .pane.unfocused {
-          flex: 0 0 15% !important;
+          flex: 0 0 10% !important;
           opacity: 0.4;
         }
         .pane.equal {
