@@ -549,54 +549,92 @@ function loadSplitView() {
         
         /* Focus mode styles */
         .pane.focused {
-          flex: 0 0 90% !important;
+          position: absolute !important;
+          width: 95% !important;
+          z-index: 15;
           opacity: 1;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .pane.focused.left-focused {
+          left: 0;
+        }
+        .pane.focused.right-focused {
+          right: 0;
         }
         .pane.unfocused {
-          flex: 0 0 10% !important;
-          opacity: 0.4;
+          position: absolute !important;
+          width: 100% !important;
+          opacity: 0.3;
+          z-index: 10;
+        }
+        .pane.unfocused.left-unfocused {
+          left: 0;
+        }
+        .pane.unfocused.right-unfocused {
+          right: 0;
         }
         .pane.equal {
           flex: 1;
           opacity: 1;
+          position: relative;
         }
         
-        /* Overlay for unfocused pane */
-        .overlay {
+        /* Click area for switching to unfocused pane */
+        .switch-area {
           position: absolute;
           top: 0;
-          left: 0;
-          right: 0;
           bottom: 0;
-          background: rgba(0, 0, 0, 0.3);
-          display: none;
+          width: 5%;
           cursor: pointer;
-          z-index: 10;
+          z-index: 16;
+          display: none;
+          background: linear-gradient(90deg, rgba(0,0,0,0.1), transparent);
           transition: background 0.2s ease;
         }
-        .overlay:hover {
-          background: rgba(0, 0, 0, 0.2);
+        .switch-area:hover {
+          background: linear-gradient(90deg, rgba(0,0,0,0.2), transparent);
         }
-        .pane.unfocused .overlay {
+        .switch-area.left {
+          left: 0;
+        }
+        .switch-area.right {
+          right: 0;
+          background: linear-gradient(-90deg, rgba(0,0,0,0.1), transparent);
+        }
+        .switch-area.right:hover {
+          background: linear-gradient(-90deg, rgba(0,0,0,0.2), transparent);
+        }
+        .focus-mode .switch-area.active {
           display: block;
         }
         
-        /* Focus indicator */
-        .focus-indicator {
+        /* Tab indicators for switching panes in focus mode */
+        .pane-tab {
           position: absolute;
           top: 10px;
-          right: 10px;
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 4px;
-          padding: 4px 8px;
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.6);
+          background: rgba(0, 0, 0, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 6px;
+          padding: 6px 12px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.8);
+          cursor: pointer;
+          z-index: 20;
           display: none;
-          z-index: 11;
-          pointer-events: none;
+          transition: all 0.2s ease;
         }
-        .pane.unfocused .focus-indicator {
+        .pane-tab:hover {
+          background: rgba(0, 0, 0, 0.8);
+          color: rgba(255, 255, 255, 1);
+          transform: scale(1.05);
+        }
+        .pane-tab.left {
+          left: 10px;
+        }
+        .pane-tab.right {
+          right: 10px;
+        }
+        .focus-mode .pane.focused .pane-tab.inactive {
           display: block;
         }
         
@@ -673,24 +711,22 @@ function loadSplitView() {
       <button class="focus-toggle" id="focus-toggle" title="Toggle Focus Mode">⎚</button>
       <div class="container" id="container">
         <div class="pane equal" id="left-pane">
-          <div class="overlay" id="left-overlay"></div>
-          <div class="focus-indicator">Click to focus</div>
           <webview src="${leftService}" id="left-webview" partition="persist:left"></webview>
         </div>
         <div class="divider" id="divider"></div>
         <div class="pane equal" id="right-pane">
-          <div class="overlay" id="right-overlay"></div>
-          <div class="focus-indicator">Click to focus</div>
           <webview src="${rightService}" id="right-webview" partition="persist:right"></webview>
         </div>
+        <div class="switch-area left" id="switch-left"></div>
+        <div class="switch-area right" id="switch-right"></div>
       </div>
       <script>
         const divider = document.getElementById('divider');
         const container = document.getElementById('container');
         const leftPane = document.getElementById('left-pane');
         const rightPane = document.getElementById('right-pane');
-        const leftOverlay = document.getElementById('left-overlay');
-        const rightOverlay = document.getElementById('right-overlay');
+        const switchLeft = document.getElementById('switch-left');
+        const switchRight = document.getElementById('switch-right');
         const focusToggle = document.getElementById('focus-toggle');
         const leftWebview = document.getElementById('left-webview');
         const rightWebview = document.getElementById('right-webview');
@@ -707,12 +743,15 @@ function loadSplitView() {
           focusToggle.innerHTML = focusMode ? '◉' : '⎚';
           focusToggle.title = focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode';
           focusToggle.classList.toggle('active', focusMode);
+          container.classList.toggle('focus-mode', focusMode);
           
           if (!focusMode) {
             // Exit focus mode - return to equal split
             leftPane.className = 'pane equal';
             rightPane.className = 'pane equal';
             divider.classList.remove('hidden');
+            switchLeft.classList.remove('active');
+            switchRight.classList.remove('active');
             focusedPane = null;
           } else if (!focusedPane) {
             // Entering focus mode - default to left pane focused
@@ -728,20 +767,24 @@ function loadSplitView() {
           divider.classList.add('hidden');
           
           if (pane === 'left') {
-            leftPane.className = 'pane focused';
-            rightPane.className = 'pane unfocused';
+            leftPane.className = 'pane focused left-focused';
+            rightPane.className = 'pane unfocused right-unfocused';
+            switchLeft.classList.remove('active');
+            switchRight.classList.add('active');
           } else {
-            leftPane.className = 'pane unfocused';
-            rightPane.className = 'pane focused';
+            leftPane.className = 'pane unfocused left-unfocused';
+            rightPane.className = 'pane focused right-focused';
+            switchLeft.classList.add('active');
+            switchRight.classList.remove('active');
           }
         }
         
-        // Click handlers for overlays
-        leftOverlay.addEventListener('click', () => {
+        // Click handlers for switch areas
+        switchLeft.addEventListener('click', () => {
           if (focusMode) focusPane('left');
         });
         
-        rightOverlay.addEventListener('click', () => {
+        switchRight.addEventListener('click', () => {
           if (focusMode) focusPane('right');
         });
         
@@ -795,6 +838,7 @@ function loadSplitView() {
             focusToggle.innerHTML = '⎚';
             focusToggle.title = 'Enter Focus Mode';
             focusToggle.classList.remove('active');
+            container.classList.remove('focus-mode');
             leftPane.className = 'pane equal';
             rightPane.className = 'pane equal';
             divider.classList.remove('hidden');
