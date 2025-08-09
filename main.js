@@ -519,7 +519,7 @@ function loadSplitView() {
                            rightService.includes('gemini') ? 'Gemini' :
                            rightService.includes('openrouter') ? 'OpenRouter' : 'Grok';
   
-  mainWindow.setTitle(`Split View: ${leftServiceName} | ${rightServiceName}`);
+  mainWindow.setTitle(`${leftServiceName} | ${rightServiceName}`);
   
   // Create HTML content with two webviews side by side
   const htmlContent = `
@@ -711,11 +711,11 @@ function loadSplitView() {
       <button class="focus-toggle" id="focus-toggle" title="Toggle Focus Mode">⎚</button>
       <div class="container" id="container">
         <div class="pane equal" id="left-pane">
-          <webview src="${leftService}" id="left-webview" partition="persist:left"></webview>
+          <webview src="${leftService}" id="left-webview" partition="persist:left" allowpopups></webview>
         </div>
         <div class="divider" id="divider"></div>
         <div class="pane equal" id="right-pane">
-          <webview src="${rightService}" id="right-webview" partition="persist:right"></webview>
+          <webview src="${rightService}" id="right-webview" partition="persist:right" allowpopups></webview>
         </div>
         <div class="switch-area left" id="switch-left"></div>
         <div class="switch-area right" id="switch-right"></div>
@@ -853,6 +853,19 @@ function loadSplitView() {
         
         rightWebview.addEventListener('dom-ready', () => {
           console.log('Right webview loaded');
+        });
+        
+        // Handle popup windows (links that open in new window)
+        leftWebview.addEventListener('new-window', (e) => {
+          e.preventDefault();
+          const { shell } = require('electron');
+          shell.openExternal(e.url);
+        });
+        
+        rightWebview.addEventListener('new-window', (e) => {
+          e.preventDefault();
+          const { shell } = require('electron');
+          shell.openExternal(e.url);
         });
       </script>
     </body>
