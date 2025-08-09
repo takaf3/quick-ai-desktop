@@ -1,6 +1,8 @@
 # Quick AI Desktop
 
-A lightweight desktop application that provides quick access to ChatGPT, Claude, Grok, Gemini, and OpenRouter AI through a menubar/tray icon and global shortcut. Built with Electron. This project was entirely created using Vibe Coding's AI assistance, with no human-written code. Currently, it has only been tested on macOS.
+A lightweight desktop application that provides quick access to ChatGPT, Claude, Grok, Gemini, and OpenRouter AI through a menubar/tray icon and global shortcut. Built with Electron. This project was entirely created using Vibe Coding's AI assistance, with no human-written code.
+
+> ⚠️ **Platform Compatibility Notice**: This application has only been tested on macOS. While builds for Windows and Linux are available, they may not work as expected and could have platform-specific issues.
 
 ## Features
 
@@ -46,9 +48,9 @@ npm run build
 ```
 
 Platform-specific builds:
-- macOS: `npm run build:mac`
-- Windows: `npm run build:win`
-- Linux: `npm run build:linux`
+- macOS: `npm run build:mac` ✅ **Tested and working**
+- Windows: `npm run build:win` ⚠️ **Untested - may have issues**
+- Linux: `npm run build:linux` ⚠️ **Untested - may have issues**
 
 The built application will be available in the `dist` directory.
 
