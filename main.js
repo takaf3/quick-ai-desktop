@@ -19,6 +19,9 @@ let windowWidth = 1000; // Default width
 let windowHeight = 900; // Default height
 let appVisibility = 'menubar'; // Default visibility: 'menubar' or 'both'
 let updateContextMenu;
+let isSplitView = false;
+let leftService = 'https://grok.com/';
+let rightService = 'https://chatgpt.com/';
 
 // Initially hide dock icon (for menubar-only mode)
 if (appVisibility === 'menubar') {
@@ -31,30 +34,38 @@ function createWindow() {
                      currentSite.includes('gemini') ? 'Gemini' :
                      currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
   
+  const width = isSplitView ? windowWidth * 2 : windowWidth;
+  const title = isSplitView ? 'Quick AI Desktop - Split View' : `Quick ${serviceName} Desktop`;
+  
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: windowWidth,
+    width: width,
     height: windowHeight,
-    title: `Quick ${serviceName} Desktop`,
+    title: title,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      webviewTag: true // Enable webview tag for split view
     },
     show: false, // Don't show window initially
     skipTaskbar: true // Hide from taskbar
   });
 
-  // Load the selected site
-  mainWindow.loadURL(currentSite);
-
-  // Focus on chat input when page is loaded
-  mainWindow.webContents.on('did-finish-load', () => {
-    focusTextInput();
-  });
+  // Load content based on view mode
+  if (isSplitView) {
+    loadSplitView();
+  } else {
+    mainWindow.loadURL(currentSite);
+    // Focus on chat input when page is loaded
+    mainWindow.webContents.on('did-finish-load', () => {
+      focusTextInput();
+    });
+  }
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    isSplitView = false;
   });
 }
 
@@ -152,6 +163,97 @@ app.whenReady().then(async () => {
                currentSite.includes('gemini') ? 'Gemini' :
                currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok'}`,
         click: toggleWindow
+      },
+      { type: 'separator' },
+      {
+        label: 'View Mode',
+        submenu: [
+          {
+            label: 'Single View',
+            type: 'radio',
+            checked: !isSplitView,
+            click: () => toggleSplitView(false)
+          },
+          {
+            label: 'Split View',
+            type: 'radio',
+            checked: isSplitView,
+            click: () => toggleSplitView(true)
+          },
+          { type: 'separator' },
+          {
+            label: 'Left Pane Service',
+            enabled: isSplitView,
+            submenu: [
+              {
+                label: 'ChatGPT',
+                type: 'radio',
+                checked: leftService === 'https://chatgpt.com/',
+                click: () => changeSplitService('left', 'https://chatgpt.com/')
+              },
+              {
+                label: 'Claude',
+                type: 'radio',
+                checked: leftService === 'https://claude.ai/',
+                click: () => changeSplitService('left', 'https://claude.ai/')
+              },
+              {
+                label: 'Grok',
+                type: 'radio',
+                checked: leftService === 'https://grok.com/',
+                click: () => changeSplitService('left', 'https://grok.com/')
+              },
+              {
+                label: 'Gemini',
+                type: 'radio',
+                checked: leftService === 'https://gemini.google.com/app',
+                click: () => changeSplitService('left', 'https://gemini.google.com/app')
+              },
+              {
+                label: 'OpenRouter',
+                type: 'radio',
+                checked: leftService === 'https://openrouter.ai/chat',
+                click: () => changeSplitService('left', 'https://openrouter.ai/chat')
+              }
+            ]
+          },
+          {
+            label: 'Right Pane Service',
+            enabled: isSplitView,
+            submenu: [
+              {
+                label: 'ChatGPT',
+                type: 'radio',
+                checked: rightService === 'https://chatgpt.com/',
+                click: () => changeSplitService('right', 'https://chatgpt.com/')
+              },
+              {
+                label: 'Claude',
+                type: 'radio',
+                checked: rightService === 'https://claude.ai/',
+                click: () => changeSplitService('right', 'https://claude.ai/')
+              },
+              {
+                label: 'Grok',
+                type: 'radio',
+                checked: rightService === 'https://grok.com/',
+                click: () => changeSplitService('right', 'https://grok.com/')
+              },
+              {
+                label: 'Gemini',
+                type: 'radio',
+                checked: rightService === 'https://gemini.google.com/app',
+                click: () => changeSplitService('right', 'https://gemini.google.com/app')
+              },
+              {
+                label: 'OpenRouter',
+                type: 'radio',
+                checked: rightService === 'https://openrouter.ai/chat',
+                click: () => changeSplitService('right', 'https://openrouter.ai/chat')
+              }
+            ]
+          }
+        ]
       },
       { type: 'separator' },
       {
@@ -339,6 +441,166 @@ function changeAppVisibility(visibility) {
     });
   }
   
+  updateContextMenu();
+}
+
+// Function to load split view content
+function loadSplitView() {
+  if (!mainWindow) return;
+  
+  const leftServiceName = leftService.includes('chatgpt') ? 'ChatGPT' : 
+                          leftService.includes('claude') ? 'Claude' : 
+                          leftService.includes('gemini') ? 'Gemini' :
+                          leftService.includes('openrouter') ? 'OpenRouter' : 'Grok';
+  
+  const rightServiceName = rightService.includes('chatgpt') ? 'ChatGPT' : 
+                           rightService.includes('claude') ? 'Claude' : 
+                           rightService.includes('gemini') ? 'Gemini' :
+                           rightService.includes('openrouter') ? 'OpenRouter' : 'Grok';
+  
+  mainWindow.setTitle(`Split View: ${leftServiceName} | ${rightServiceName}`);
+  
+  // Create HTML content with two webviews side by side
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { margin: 0; padding: 0; overflow: hidden; background: #1a1a1a; }
+        .container { display: flex; width: 100vw; height: 100vh; }
+        .pane { flex: 1; height: 100%; position: relative; }
+        webview { width: 100%; height: 100%; }
+        .divider { 
+          width: 3px; 
+          background: #333; 
+          cursor: col-resize; 
+          position: relative;
+        }
+        .divider:hover {
+          background: #555;
+        }
+        .divider::after {
+          content: '';
+          position: absolute;
+          left: -2px;
+          right: -2px;
+          top: 0;
+          bottom: 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container" id="container">
+        <div class="pane" id="left-pane">
+          <webview src="${leftService}" id="left-webview" partition="persist:left"></webview>
+        </div>
+        <div class="divider" id="divider"></div>
+        <div class="pane" id="right-pane">
+          <webview src="${rightService}" id="right-webview" partition="persist:right"></webview>
+        </div>
+      </div>
+      <script>
+        const divider = document.getElementById('divider');
+        const container = document.getElementById('container');
+        const leftPane = document.getElementById('left-pane');
+        const rightPane = document.getElementById('right-pane');
+        
+        let isResizing = false;
+        let startX = 0;
+        let startLeftWidth = 0;
+        
+        divider.addEventListener('mousedown', (e) => {
+          isResizing = true;
+          startX = e.clientX;
+          startLeftWidth = leftPane.offsetWidth;
+          document.body.style.cursor = 'col-resize';
+          e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+          if (!isResizing) return;
+          
+          const containerWidth = container.offsetWidth;
+          const newLeftWidth = startLeftWidth + (e.clientX - startX);
+          const percentage = (newLeftWidth / containerWidth) * 100;
+          
+          if (percentage > 20 && percentage < 80) {
+            leftPane.style.flex = percentage + '%';
+            rightPane.style.flex = (100 - percentage) + '%';
+          }
+        });
+        
+        document.addEventListener('mouseup', () => {
+          if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+          }
+        });
+        
+        // Handle webview events
+        const leftWebview = document.getElementById('left-webview');
+        const rightWebview = document.getElementById('right-webview');
+        
+        leftWebview.addEventListener('dom-ready', () => {
+          console.log('Left webview loaded');
+        });
+        
+        rightWebview.addEventListener('dom-ready', () => {
+          console.log('Right webview loaded');
+        });
+      </script>
+    </body>
+    </html>
+  `;
+  
+  mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+}
+
+// Function to toggle split view
+function toggleSplitView(enableSplit) {
+  isSplitView = enableSplit;
+  
+  if (!mainWindow) {
+    createWindow();
+    mainWindow.once('ready-to-show', () => {
+      mainWindow.show();
+      mainWindow.focus();
+    });
+  } else {
+    // Resize and reload window for the new view mode
+    const width = isSplitView ? windowWidth * 2 : windowWidth;
+    mainWindow.setSize(width, windowHeight);
+    
+    if (isSplitView) {
+      loadSplitView();
+    } else {
+      const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
+                         currentSite.includes('claude') ? 'Claude' : 
+                         currentSite.includes('gemini') ? 'Gemini' :
+                         currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
+      mainWindow.setTitle(`Quick ${serviceName} Desktop`);
+      mainWindow.loadURL(currentSite);
+      mainWindow.webContents.once('did-finish-load', () => {
+        focusTextInput();
+      });
+    }
+  }
+  
+  updateContextMenu();
+}
+
+// Function to change service in split view
+function changeSplitService(pane, service) {
+  if (!isSplitView || !mainWindow) return;
+  
+  if (pane === 'left') {
+    leftService = service;
+  } else {
+    rightService = service;
+  }
+  
+  // Reload the split view with updated services
+  loadSplitView();
   updateContextMenu();
 }
 
