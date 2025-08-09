@@ -14,6 +14,7 @@ function getTrayIcon() {
 let mainWindow = null;
 let tray = null;
 let currentShortcut = 'Control+Space'; // Default shortcut
+let splitViewShortcut = 'Control+Shift+S'; // Default split view shortcut
 let currentSite = 'https://grok.com/'; // Default site
 let windowWidth = 1000; // Default width
 let windowHeight = 900; // Default height
@@ -134,6 +135,29 @@ function toggleWindow() {
       mainWindow.focus();
       // Refocus on chat input when showing window
       focusTextInput();
+    }
+  }
+}
+
+function toggleSplitWindow() {
+  if (mainWindow === null) {
+    isSplitView = true;
+    createWindow();
+    mainWindow.once('ready-to-show', () => {
+      mainWindow.show();
+      mainWindow.focus();
+    });
+  } else {
+    if (mainWindow.isVisible() && isSplitView) {
+      // If split view is already visible, hide it
+      mainWindow.hide();
+    } else {
+      // Switch to split view and show window
+      if (!isSplitView) {
+        toggleSplitView(true);
+      }
+      mainWindow.show();
+      mainWindow.focus();
     }
   }
 }
@@ -292,19 +316,47 @@ app.whenReady().then(async () => {
         ]
       },
       {
-        label: 'Keyboard Shortcut',
+        label: 'Keyboard Shortcuts',
         submenu: [
           {
-            label: 'Ctrl+Space',
-            type: 'radio',
-            checked: currentShortcut === 'Control+Space',
-            click: () => changeShortcut('Control+Space')
+            label: 'Single View Shortcut',
+            submenu: [
+              {
+                label: 'Ctrl+Space',
+                type: 'radio',
+                checked: currentShortcut === 'Control+Space',
+                click: () => changeShortcut('Control+Space')
+              },
+              {
+                label: 'Ctrl+Shift+Space',
+                type: 'radio',
+                checked: currentShortcut === 'Control+Shift+Space',
+                click: () => changeShortcut('Control+Shift+Space')
+              }
+            ]
           },
           {
-            label: 'Ctrl+Shift+Space',
-            type: 'radio',
-            checked: currentShortcut === 'Control+Shift+Space',
-            click: () => changeShortcut('Control+Shift+Space')
+            label: 'Split View Shortcut',
+            submenu: [
+              {
+                label: 'Ctrl+Shift+S',
+                type: 'radio',
+                checked: splitViewShortcut === 'Control+Shift+S',
+                click: () => changeSplitViewShortcut('Control+Shift+S')
+              },
+              {
+                label: 'Ctrl+Alt+S',
+                type: 'radio',
+                checked: splitViewShortcut === 'Control+Alt+S',
+                click: () => changeSplitViewShortcut('Control+Alt+S')
+              },
+              {
+                label: 'Ctrl+Shift+D',
+                type: 'radio',
+                checked: splitViewShortcut === 'Control+Shift+D',
+                click: () => changeSplitViewShortcut('Control+Shift+D')
+              }
+            ]
           }
         ]
       },
@@ -365,8 +417,9 @@ app.whenReady().then(async () => {
   
   updateContextMenu();
 
-  // Register global shortcut
+  // Register global shortcuts
   globalShortcut.register(currentShortcut, toggleWindow);
+  globalShortcut.register(splitViewShortcut, toggleSplitWindow);
 
   app.on('activate', () => {
     if (mainWindow === null) {
@@ -386,6 +439,14 @@ function changeShortcut(newShortcut) {
   globalShortcut.unregister(currentShortcut);
   currentShortcut = newShortcut;
   globalShortcut.register(currentShortcut, toggleWindow);
+  updateContextMenu(); // Update the menu to reflect the new shortcut
+}
+
+// Function to change split view shortcut
+function changeSplitViewShortcut(newShortcut) {
+  globalShortcut.unregister(splitViewShortcut);
+  splitViewShortcut = newShortcut;
+  globalShortcut.register(splitViewShortcut, toggleSplitWindow);
   updateContextMenu(); // Update the menu to reflect the new shortcut
 }
 
@@ -466,15 +527,91 @@ function loadSplitView() {
     <html>
     <head>
       <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #1a1a1a; }
-        .container { display: flex; width: 100vw; height: 100vh; }
-        .pane { flex: 1; height: 100%; position: relative; }
-        webview { width: 100%; height: 100%; }
+        body { 
+          margin: 0; 
+          padding: 0; 
+          overflow: hidden; 
+          background: #1a1a1a; 
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .container { 
+          display: flex; 
+          width: 100vw; 
+          height: 100vh; 
+          position: relative;
+        }
+        .pane { 
+          height: 100%; 
+          position: relative; 
+          transition: flex 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+          overflow: hidden;
+        }
+        
+        /* Focus mode styles */
+        .pane.focused {
+          flex: 0 0 85% !important;
+          opacity: 1;
+        }
+        .pane.unfocused {
+          flex: 0 0 15% !important;
+          opacity: 0.4;
+        }
+        .pane.equal {
+          flex: 1;
+          opacity: 1;
+        }
+        
+        /* Overlay for unfocused pane */
+        .overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.3);
+          display: none;
+          cursor: pointer;
+          z-index: 10;
+          transition: background 0.2s ease;
+        }
+        .overlay:hover {
+          background: rgba(0, 0, 0, 0.2);
+        }
+        .pane.unfocused .overlay {
+          display: block;
+        }
+        
+        /* Focus indicator */
+        .focus-indicator {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 4px;
+          padding: 4px 8px;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.6);
+          display: none;
+          z-index: 11;
+          pointer-events: none;
+        }
+        .pane.unfocused .focus-indicator {
+          display: block;
+        }
+        
+        webview { 
+          width: 100%; 
+          height: 100%; 
+        }
+        
         .divider { 
           width: 3px; 
           background: #333; 
           cursor: col-resize; 
           position: relative;
+          z-index: 20;
+          transition: opacity 0.3s ease;
         }
         .divider:hover {
           background: #555;
@@ -487,15 +624,63 @@ function loadSplitView() {
           top: 0;
           bottom: 0;
         }
+        .divider.hidden {
+          opacity: 0;
+          pointer-events: none;
+        }
+        
+        /* Focus mode toggle button */
+        .focus-toggle {
+          position: absolute;
+          top: 8px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 2px 8px;
+          color: rgba(255, 255, 255, 0.4);
+          font-size: 10px;
+          cursor: pointer;
+          z-index: 30;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          opacity: 0.5;
+        }
+        .focus-toggle:hover {
+          background: rgba(0, 0, 0, 0.7);
+          color: rgba(255, 255, 255, 0.9);
+          border-color: rgba(255, 255, 255, 0.3);
+          padding: 4px 12px;
+          font-size: 11px;
+          opacity: 1;
+          transform: translateX(-50%) scale(1.05);
+        }
+        .focus-toggle.active {
+          background: rgba(255, 255, 255, 0.15);
+          color: rgba(255, 255, 255, 0.9);
+          border-color: rgba(255, 255, 255, 0.3);
+          padding: 4px 12px;
+          font-size: 11px;
+          opacity: 0.9;
+        }
+        .focus-toggle.active:hover {
+          background: rgba(255, 255, 255, 0.2);
+          opacity: 1;
+        }
       </style>
     </head>
     <body>
+      <button class="focus-toggle" id="focus-toggle" title="Toggle Focus Mode">⎚</button>
       <div class="container" id="container">
-        <div class="pane" id="left-pane">
+        <div class="pane equal" id="left-pane">
+          <div class="overlay" id="left-overlay"></div>
+          <div class="focus-indicator">Click to focus</div>
           <webview src="${leftService}" id="left-webview" partition="persist:left"></webview>
         </div>
         <div class="divider" id="divider"></div>
-        <div class="pane" id="right-pane">
+        <div class="pane equal" id="right-pane">
+          <div class="overlay" id="right-overlay"></div>
+          <div class="focus-indicator">Click to focus</div>
           <webview src="${rightService}" id="right-webview" partition="persist:right"></webview>
         </div>
       </div>
@@ -504,12 +689,65 @@ function loadSplitView() {
         const container = document.getElementById('container');
         const leftPane = document.getElementById('left-pane');
         const rightPane = document.getElementById('right-pane');
+        const leftOverlay = document.getElementById('left-overlay');
+        const rightOverlay = document.getElementById('right-overlay');
+        const focusToggle = document.getElementById('focus-toggle');
+        const leftWebview = document.getElementById('left-webview');
+        const rightWebview = document.getElementById('right-webview');
         
         let isResizing = false;
         let startX = 0;
         let startLeftWidth = 0;
+        let focusMode = false;
+        let focusedPane = null; // 'left', 'right', or null
         
+        // Focus mode toggle
+        focusToggle.addEventListener('click', () => {
+          focusMode = !focusMode;
+          focusToggle.innerHTML = focusMode ? '◉' : '⎚';
+          focusToggle.title = focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode';
+          focusToggle.classList.toggle('active', focusMode);
+          
+          if (!focusMode) {
+            // Exit focus mode - return to equal split
+            leftPane.className = 'pane equal';
+            rightPane.className = 'pane equal';
+            divider.classList.remove('hidden');
+            focusedPane = null;
+          } else if (!focusedPane) {
+            // Entering focus mode - default to left pane focused
+            focusPane('left');
+          }
+        });
+        
+        // Function to focus a specific pane
+        function focusPane(pane) {
+          if (!focusMode) return;
+          
+          focusedPane = pane;
+          divider.classList.add('hidden');
+          
+          if (pane === 'left') {
+            leftPane.className = 'pane focused';
+            rightPane.className = 'pane unfocused';
+          } else {
+            leftPane.className = 'pane unfocused';
+            rightPane.className = 'pane focused';
+          }
+        }
+        
+        // Click handlers for overlays
+        leftOverlay.addEventListener('click', () => {
+          if (focusMode) focusPane('left');
+        });
+        
+        rightOverlay.addEventListener('click', () => {
+          if (focusMode) focusPane('right');
+        });
+        
+        // Manual resize with divider (only when not in focus mode)
         divider.addEventListener('mousedown', (e) => {
+          if (focusMode) return;
           isResizing = true;
           startX = e.clientX;
           startLeftWidth = leftPane.offsetWidth;
@@ -518,7 +756,7 @@ function loadSplitView() {
         });
         
         document.addEventListener('mousemove', (e) => {
-          if (!isResizing) return;
+          if (!isResizing || focusMode) return;
           
           const containerWidth = container.offsetWidth;
           const newLeftWidth = startLeftWidth + (e.clientX - startX);
@@ -537,10 +775,34 @@ function loadSplitView() {
           }
         });
         
-        // Handle webview events
-        const leftWebview = document.getElementById('left-webview');
-        const rightWebview = document.getElementById('right-webview');
+        // Keyboard shortcuts for focus switching
+        document.addEventListener('keydown', (e) => {
+          if (!focusMode) return;
+          
+          // Tab or Arrow keys to switch focus
+          if (e.key === 'Tab' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            if (focusedPane === 'left') {
+              focusPane('right');
+            } else {
+              focusPane('left');
+            }
+          }
+          
+          // Escape to exit focus mode
+          if (e.key === 'Escape') {
+            focusMode = false;
+            focusToggle.innerHTML = '⎚';
+            focusToggle.title = 'Enter Focus Mode';
+            focusToggle.classList.remove('active');
+            leftPane.className = 'pane equal';
+            rightPane.className = 'pane equal';
+            divider.classList.remove('hidden');
+            focusedPane = null;
+          }
+        });
         
+        // Handle webview events
         leftWebview.addEventListener('dom-ready', () => {
           console.log('Left webview loaded');
         });
