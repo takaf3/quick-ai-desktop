@@ -17,13 +17,21 @@
     "directories": {
       "output": "dist"
     },
+    "icon": "icon",
     "mac": {
       "category": "public.app-category.developer-tools",
+      "icon": "icon.icns",
       "target": ["dmg", "zip"],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "win": {
+      "icon": "icon.ico"
+    },
+    "linux": {
+      "icon": "icon.png"
     }
   },
   "keywords": [],

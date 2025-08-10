@@ -3,10 +3,15 @@ const path = require('path');
 
 // Function to get the appropriate tray icon based on theme
 function getTrayIcon() {
-  const iconPath = nativeTheme.shouldUseDarkColors
-    ? path.join(__dirname, 'menubar-icon-dark.png')
-    : path.join(__dirname, 'menubar-icon-light.png');
+  const iconName = nativeTheme.shouldUseDarkColors
+    ? 'menubar-icon-dark'
+    : 'menubar-icon-light';
+  
+  // Create nativeImage from path - Electron will automatically look for @2x version
+  const iconPath = path.join(__dirname, `${iconName}.png`);
   const icon = require('electron').nativeImage.createFromPath(iconPath);
+  
+  // Mark as template image for proper theming on macOS
   icon.setTemplateImage(true);
   return icon;
 }

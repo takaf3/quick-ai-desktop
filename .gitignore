@@ -53,4 +53,36 @@ coverage/
 
 # Chrome extensions (except README)
 extensions/*
-!extensions/README.md 
+!extensions/README.md
+
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Icon generation scripts (optional - keep if you want to track them)
+# generate_icons.py
+# generate_macos_icon.py
+
+# Temporary iconset directories
+*.iconset/
+icon.iconset/
