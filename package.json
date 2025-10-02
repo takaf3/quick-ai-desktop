@@ -37,6 +37,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "packageManager": "bun@1.2.20",
   "dependencies": {},
   "devDependencies": {
     "electron": "^29.0.0",

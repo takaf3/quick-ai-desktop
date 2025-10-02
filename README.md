@@ -17,7 +17,7 @@ A lightweight desktop application that provides quick access to ChatGPT, Claude,
 ## Prerequisites
 
 - Node.js (v14 or later)
-- npm (v6 or later)
+- [Bun](https://bun.sh) (v1.2 or later)
 - Git
 
 ## Installation
@@ -30,27 +30,27 @@ A lightweight desktop application that provides quick access to ChatGPT, Claude,
 
 2. Install dependencies:
    ```bash
-   npm install
+   bun install
    ```
 
 ## Development
 
 To run the app in development mode:
 ```bash
-npm start
+bun start
 ```
 
 ## Building
 
 Build for your current platform:
 ```bash
-npm run build
+bun run build
 ```
 
 Platform-specific builds:
-- macOS: `npm run build:mac` ✅ **Tested and working**
-- Windows: `npm run build:win` ⚠️ **Untested - may have issues**
-- Linux: `npm run build:linux` ⚠️ **Untested - may have issues**
+- macOS: `bun run build:mac` ✅ **Tested and working**
+- Windows: `bun run build:win` ⚠️ **Untested - may have issues**
+- Linux: `bun run build:linux` ⚠️ **Untested - may have issues**
 
 The built application will be available in the `dist` directory.
 

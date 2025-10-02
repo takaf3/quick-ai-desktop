@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeTheme } = require('electron');
+const { app, BrowserWindow, globalShortcut, Tray, Menu, nativeTheme, shell } = require('electron');
 const path = require('path');
 
 // Function to get the appropriate tray icon based on theme
@@ -38,7 +38,8 @@ function createWindow() {
   const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
                      currentSite.includes('claude') ? 'Claude' : 
                      currentSite.includes('gemini') ? 'Gemini' :
-                     currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
+                     currentSite.includes('openrouter') ? 'OpenRouter' : 
+                     currentSite.includes('t3.chat') ? 'T3' : 'Grok';
   
   const width = isSplitView ? windowWidth * 2 : windowWidth;
   const title = isSplitView ? 'Quick AI Desktop - Split View' : `Quick ${serviceName} Desktop`;
@@ -56,6 +57,12 @@ function createWindow() {
     },
     show: false, // Don't show window initially
     skipTaskbar: true // Hide from taskbar
+  });
+
+  // Open links that would spawn a new window in the system browser instead
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
   });
 
   // Load content based on view mode
@@ -84,7 +91,8 @@ function focusTextInput() {
     'claude': 'div[contenteditable="true"], textarea[placeholder*="Talk to Claude"], div.ProseMirror',
     'grok': 'textarea[placeholder*="Ask anything"], textarea[placeholder*="Ask Grok"], input[type="text"]',
     'gemini': 'rich-textarea textarea, textarea[placeholder*="Enter a prompt"], div[contenteditable="true"]',
-    'openrouter': 'textarea[placeholder*="Type a message"], textarea[placeholder*="Send a message"], input[type="text"]'
+    'openrouter': 'textarea[placeholder*="Type a message"], textarea[placeholder*="Send a message"], input[type="text"]',
+    't3': 'textarea[placeholder*="Type a message"], textarea, input[type="text"]'
   };
   
   // Determine which service we're using
@@ -93,6 +101,7 @@ function focusTextInput() {
   else if (currentSite.includes('claude')) serviceKey = 'claude';
   else if (currentSite.includes('gemini')) serviceKey = 'gemini';
   else if (currentSite.includes('openrouter')) serviceKey = 'openrouter';
+  else if (currentSite.includes('t3.chat')) serviceKey = 't3';
   
   const selector = selectors[serviceKey];
   
@@ -182,7 +191,8 @@ app.whenReady().then(async () => {
     const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' :
                        currentSite.includes('claude') ? 'Claude' :
                        currentSite.includes('gemini') ? 'Gemini' :
-                       currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
+                       currentSite.includes('openrouter') ? 'OpenRouter' : 
+                       currentSite.includes('t3.chat') ? 'T3' : 'Grok';
     tray.setToolTip(`Quick ${serviceName} Desktop`);
     
     const contextMenu = Menu.buildFromTemplate([
@@ -190,7 +200,8 @@ app.whenReady().then(async () => {
         label: `Open ${currentSite.includes('chatgpt') ? 'ChatGPT' :
                currentSite.includes('claude') ? 'Claude' :
                currentSite.includes('gemini') ? 'Gemini' :
-               currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok'}`,
+               currentSite.includes('openrouter') ? 'OpenRouter' : 
+               currentSite.includes('t3.chat') ? 'T3' : 'Grok'}`,
         click: toggleWindow
       },
       { type: 'separator' },
@@ -243,6 +254,12 @@ app.whenReady().then(async () => {
                 type: 'radio',
                 checked: leftService === 'https://openrouter.ai/chat',
                 click: () => changeSplitService('left', 'https://openrouter.ai/chat')
+              },
+              {
+                label: 'T3',
+                type: 'radio',
+                checked: leftService === 'https://t3.chat/',
+                click: () => changeSplitService('left', 'https://t3.chat/')
               }
             ]
           },
@@ -279,6 +296,12 @@ app.whenReady().then(async () => {
                 type: 'radio',
                 checked: rightService === 'https://openrouter.ai/chat',
                 click: () => changeSplitService('right', 'https://openrouter.ai/chat')
+              },
+              {
+                label: 'T3',
+                type: 'radio',
+                checked: rightService === 'https://t3.chat/',
+                click: () => changeSplitService('right', 'https://t3.chat/')
               }
             ]
           }
@@ -317,6 +340,12 @@ app.whenReady().then(async () => {
             type: 'radio',
             checked: currentSite === 'https://openrouter.ai/chat',
             click: () => changeSite('https://openrouter.ai/chat')
+          },
+          {
+            label: 'T3',
+            type: 'radio',
+            checked: currentSite === 'https://t3.chat/',
+            click: () => changeSite('https://t3.chat/')
           }
         ]
       },
@@ -461,7 +490,8 @@ function changeSite(newSite) {
   const serviceName = currentSite.includes('chatgpt') ? 'ChatGPT' : 
                      currentSite.includes('claude') ? 'Claude' : 
                      currentSite.includes('gemini') ? 'Gemini' :
-                     currentSite.includes('openrouter') ? 'OpenRouter' : 'Grok';
+                     currentSite.includes('openrouter') ? 'OpenRouter' : 
+                     currentSite.includes('t3.chat') ? 'T3' : 'Grok';
   
   if (mainWindow !== null) {
     mainWindow.loadURL(currentSite);
@@ -517,12 +547,14 @@ function loadSplitView() {
   const leftServiceName = leftService.includes('chatgpt') ? 'ChatGPT' : 
                           leftService.includes('claude') ? 'Claude' : 
                           leftService.includes('gemini') ? 'Gemini' :
-                          leftService.includes('openrouter') ? 'OpenRouter' : 'Grok';
+                          leftService.includes('openrouter') ? 'OpenRouter' : 
+                          leftService.includes('t3.chat') ? 'T3' : 'Grok';
   
   const rightServiceName = rightService.includes('chatgpt') ? 'ChatGPT' : 
                            rightService.includes('claude') ? 'Claude' : 
                            rightService.includes('gemini') ? 'Gemini' :
-                           rightService.includes('openrouter') ? 'OpenRouter' : 'Grok';
+                           rightService.includes('openrouter') ? 'OpenRouter' : 
+                           rightService.includes('t3.chat') ? 'T3' : 'Grok';
   
   mainWindow.setTitle(`${leftServiceName} | ${rightServiceName}`);
   
